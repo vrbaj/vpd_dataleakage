@@ -16,8 +16,8 @@ leakage_param = [True, False]
 param_grid = {"n_estimators": [50, 100, 150, 200, 250, 300, 350, 400],
               "learning_rate": [0.1, 1, 10]}
 results = {}
-RANGE_START = 0
-RANGE_END = 30
+RANGE_START = 30
+RANGE_END = 60
 for split_seed in range(RANGE_START, RANGE_END):
     mcc = {"leakage": 0,
            "correct": 0}
