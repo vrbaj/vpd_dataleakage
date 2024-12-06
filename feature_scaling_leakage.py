@@ -16,7 +16,7 @@ leakage_param = [True, False]
 param_grid = {"n_estimators": [50, 100, 150, 200, 250, 300, 350, 400],
               "learning_rate": [0.1, 1, 10]}
 results = {}
-for SEED_N in tqdm(range(1)):
+for split_seed in tqdm(range(100)):
     mcc = {"leakage": 0,
            "correct": 0}
     for leakage in leakage_param:
@@ -26,15 +26,15 @@ for SEED_N in tqdm(range(1)):
         if leakage:
             X = scaler.fit_transform(X)
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2,
-                                                                random_state=SEED_N)
+                                                                random_state=split_seed)
         else:
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2,
-                                                                random_state=SEED_N)
+                                                                random_state=split_seed)
             X_train = scaler.fit_transform(X_train)
             X_test = scaler.transform(X_test)
 
 
-        adaboost = AdaBoostClassifier(algorithm='SAMME', random_state=SEED_N)
+        adaboost = AdaBoostClassifier(algorithm='SAMME', random_state=42)
 
         grid_search = GridSearchCV(estimator=adaboost, param_grid=param_grid, scoring="matthews_corrcoef",
                                    cv=10, n_jobs=-1)
@@ -58,7 +58,7 @@ for SEED_N in tqdm(range(1)):
         else:
             mcc["correct"] = mcc_test
     mcc_diff = mcc["leakage"] - mcc["correct"]
-    results[SEED_N] = mcc
+    results[split_seed] = mcc
     # if mcc_diff != 0:
     #     print(f"Difference {mcc["leakage"] - mcc["correct"]} in Matthews Correlation Coefficient for seed {SEED_N}:")
     #     break
