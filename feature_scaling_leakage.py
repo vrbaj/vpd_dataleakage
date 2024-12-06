@@ -25,9 +25,11 @@ for SEED_N in tqdm(range(1)):
         scaler = MinMaxScaler()
         if leakage:
             X = scaler.fit_transform(X)
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=SEED_N)
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2,
+                                                                random_state=SEED_N)
         else:
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=SEED_N)
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2,
+                                                                random_state=SEED_N)
             X_train = scaler.fit_transform(X_train)
             X_test = scaler.transform(X_test)
 
