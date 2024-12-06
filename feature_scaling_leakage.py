@@ -16,7 +16,9 @@ leakage_param = [True, False]
 param_grid = {"n_estimators": [50, 100, 150, 200, 250, 300, 350, 400],
               "learning_rate": [0.1, 1, 10]}
 results = {}
-for split_seed in tqdm(range(100)):
+RANGE_START = 0
+RANGE_END = 30
+for split_seed in range(RANGE_START, RANGE_END):
     mcc = {"leakage": 0,
            "correct": 0}
     for leakage in leakage_param:
@@ -59,8 +61,9 @@ for split_seed in tqdm(range(100)):
             mcc["correct"] = mcc_test
     mcc_diff = mcc["leakage"] - mcc["correct"]
     results[split_seed] = mcc
+    print(f"Difference {mcc["leakage"] - mcc["correct"]} in Matthews Correlation Coefficient for seed {split_seed}:")
     # if mcc_diff != 0:
-    #     print(f"Difference {mcc["leakage"] - mcc["correct"]} in Matthews Correlation Coefficient for seed {SEED_N}:")
+    #     print(f"Difference {mcc["leakage"] - mcc["correct"]} in Matthews Correlation Coefficient for seed {split_seed}:")
     #     break
-with open("results_scaling_leakage.json", "w") as f:
+with open(f"results_scaling_leakage_{RANGE_START}_{RANGE_END}.json", "w") as f:
     json.dump(results, f)
