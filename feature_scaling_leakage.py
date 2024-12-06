@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import pandas as pd
 from sklearn.ensemble import AdaBoostClassifier
@@ -14,7 +15,8 @@ leakage_param = [True, False]
 
 param_grid = {"n_estimators": [50, 100, 150, 200, 250, 300, 350, 400],
               "learning_rate": [0.1, 1, 10]}
-for SEED_N in range(50):
+results = {}
+for SEED_N in tqdm(range(1)):
     mcc = {"leakage": 0,
            "correct": 0}
     for leakage in leakage_param:
@@ -32,7 +34,6 @@ for SEED_N in range(50):
 
         adaboost = AdaBoostClassifier(algorithm='SAMME', random_state=SEED_N)
 
-        print(f"running gridsearch for seed {SEED_N} with leakage {leakage}")
         grid_search = GridSearchCV(estimator=adaboost, param_grid=param_grid, scoring="matthews_corrcoef",
                                    cv=10, n_jobs=-1)
 
@@ -55,6 +56,9 @@ for SEED_N in range(50):
         else:
             mcc["correct"] = mcc_test
     mcc_diff = mcc["leakage"] - mcc["correct"]
-    if mcc_diff != 0:
-        print(f"Difference {mcc["leakage"] - mcc["correct"]} in Matthews Correlation Coefficient for seed {SEED_N}:")
-        break
+    results[SEED_N] = mcc
+    # if mcc_diff != 0:
+    #     print(f"Difference {mcc["leakage"] - mcc["correct"]} in Matthews Correlation Coefficient for seed {SEED_N}:")
+    #     break
+with open("results_scaling_leakage.json", "w") as f:
+    json.dump(results, f)
