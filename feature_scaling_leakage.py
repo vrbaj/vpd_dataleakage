@@ -105,7 +105,6 @@ for clf_name, clf_settings in clfs.items():
             results[split_seed] = mcc
             print(f"Difference {mcc["leakage"] - mcc["correct"]} in Matthews Correlation Coefficient for seed {split_seed}, "
                   f"mcc correct: {mcc['correct']}")
-
-        with open(f"results_{scaler.__class__.__name__}_leakage_{RANGE_START}_{RANGE_END}_{clf_name}.json",
-                  "w", encoding="utf8") as f:
+        filename_to_save = f"results_{scaler.__class__.__name__}_leakage_{RANGE_START}_{RANGE_END}_{clf_name}.json"
+        with open(Path("results", filename_to_save), "w", encoding="utf8") as f:
             json.dump(results, f)
