@@ -12,7 +12,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.metrics import matthews_corrcoef
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
-
+from tqdm import tqdm
 
 results = {}
 RANGE_START = 0
@@ -58,7 +58,8 @@ for clf_name, clf_settings in clfs.items():
     clf_grid = clf_settings[0]
     clf = clf_settings[1]
     for scaler in [MinMaxScaler(), StandardScaler()]:
-        for split_seed in range(RANGE_START, RANGE_END):
+        print(f"Running {clf_name} with {scaler.__class__.__name__}")
+        for split_seed in tqdm(range(RANGE_START, RANGE_END)):
             mcc = {"leakage": 0,
                    "correct": 0}
             for leakage in leakage_param:
