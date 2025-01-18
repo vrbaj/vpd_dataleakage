@@ -73,7 +73,6 @@ for clf_name, clf_settings in clfs.items():
                     X_train = scaler.fit_transform(X_train)
                     X_test = scaler.transform(X_test)
 
-
                 # adaboost = AdaBoostClassifier(algorithm='SAMME', random_state=42)
                 # svm_clf = SVC(random_state=42, max_iter=int(5e5))
                 # rf_clf = RandomForestClassifier(random_state=42)
