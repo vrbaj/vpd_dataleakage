@@ -94,7 +94,6 @@ for clf_name, clf_settings in clfs.items():
                 best_model = grid_search.best_estimator_
                 y_pred = best_model.predict(X_test)
 
-
                 # Compute and display Matthews correlation coefficient
                 mcc_test = matthews_corrcoef(y_test, y_pred)
                 if leakage:
