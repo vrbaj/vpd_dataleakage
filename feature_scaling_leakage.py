@@ -44,7 +44,6 @@ param_grid_mlp = {
     'alpha': [0.0001, 0.001, 0.01]
 }
 
-
 clfs = {
     "adaboost": [param_grid_adaboost, AdaBoostClassifier(algorithm='SAMME', random_state=42)],
     "svm": [param_grid_svm, SVC(random_state=42, max_iter=int(5e5))],
