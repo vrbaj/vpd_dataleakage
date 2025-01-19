@@ -9,12 +9,12 @@ from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
-from sklearn.metrics import matthews_corrcoef
+from sklearn.metrics import matthews_corrcoef, balanced_accuracy_score
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
 from tqdm import tqdm
 
-results = {}
+
 RANGE_START = 0
 RANGE_END = 200
 
@@ -56,10 +56,13 @@ clfs = {
 for clf_name, clf_settings in clfs.items():
     clf_grid = clf_settings[0]
     clf = clf_settings[1]
+    results = {}
     for scaler in [MinMaxScaler(), StandardScaler()]:
         print(f"Running {clf_name} with {scaler.__class__.__name__}")
         for split_seed in tqdm(range(RANGE_START, RANGE_END)):
             mcc = {"leakage": 0,
+                   "correct": 0}
+            bcc = {"leakage": 0,
                    "correct": 0}
             for leakage in leakage_param:
                 if leakage:
@@ -78,7 +81,7 @@ for clf_name, clf_settings in clfs.items():
                 # dt_clf = DecisionTreeClassifier(random_state=42)
                 # mlp_clf = MLPClassifier(max_iter=10000, random_state=42,
                 #                         hidden_layer_sizes=(int(0.8 * X_train.shape[1])))
-                grid_search = GridSearchCV(estimator=clf, param_grid=clf_grid, scoring="matthews_corrcoef",
+                grid_search = GridSearchCV(estimator=clf, param_grid=clf_grid, scoring="balanced_accuracy",
                                            cv=10, n_jobs=-1)
 
                 # Fit the grid search to the training data
@@ -94,14 +97,19 @@ for clf_name, clf_settings in clfs.items():
 
                 # Compute and display Matthews correlation coefficient
                 mcc_test = matthews_corrcoef(y_test, y_pred)
+                bac_test = balanced_accuracy_score(y_test, y_pred)
                 if leakage:
                     mcc["leakage"] = mcc_test
+                    bcc["leakage"] = bac_test
                 else:
                     mcc["correct"] = mcc_test
+                    bcc["correct"] = bac_test
             mcc_diff = mcc["leakage"] - mcc["correct"]
-            results[split_seed] = mcc
+            results[split_seed] = {"mcc": mcc, "bcc": bcc}
             print(f"Difference {mcc["leakage"] - mcc["correct"]} in Matthews Correlation Coefficient for seed {split_seed}, "
                   f"mcc correct: {mcc['correct']}")
+            print(f"Difference {bcc["leakage"] - bcc["correct"]} in Balanced Accuracy for seed {split_seed}, "
+                  f"bcc correct: {bcc['correct']}")
         filename_to_save = f"results_{scaler.__class__.__name__}_leakage_{RANGE_START}_{RANGE_END}_{clf_name}.json"
         with open(Path("results", filename_to_save), "w", encoding="utf8") as f:
             json.dump(results, f)
