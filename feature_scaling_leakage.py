@@ -13,10 +13,13 @@ from sklearn.metrics import matthews_corrcoef, balanced_accuracy_score
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
 from tqdm import tqdm
+import warnings
+
+
 
 
 if __name__ == "__main__":
-    EXPERIMENTS = 200  # number of experiments
+    EXPERIMENTS = 1000  # number of experiments
     INFORMATION_PRINT = True  # if true, printing results of each experiment
     LEAKAGE = [True, False]
     # grid definitions
@@ -47,7 +50,7 @@ if __name__ == "__main__":
 
     # classifiers with params grid
     clfs = {
-        "adaboost": [PARAM_GRID_ADABOOST, AdaBoostClassifier(algorithm='SAMME', random_state=42)],
+        "adaboost": [PARAM_GRID_ADABOOST, AdaBoostClassifier(random_state=42)],
         "svm": [PARAM_GRID_SVM, SVC(random_state=42, max_iter=int(5e5))],
         "rf": [PARAM_GRID_RF, RandomForestClassifier(random_state=42)],
         "dt": [PARAM_GRID_DT, DecisionTreeClassifier(random_state=42)],
