@@ -8,7 +8,7 @@ import pandas as pd
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler, MaxAbsScaler
 from sklearn.metrics import matthews_corrcoef, balanced_accuracy_score
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
@@ -62,7 +62,9 @@ if __name__ == "__main__":
         clf_grid = clf_settings[0]
         clf = clf_settings[1]
         results = {}
-        for scaler in [MinMaxScaler(), StandardScaler()]:
+        for scaler in [MaxAbsScaler()]:
+                       # MinMaxScaler(), StandardScaler()
+                       # ]:
             print(f"Running {clf_name} with {scaler.__class__.__name__}")
             for split_seed in tqdm(range(EXPERIMENTS)):
                 # matthews correlation coefficient
