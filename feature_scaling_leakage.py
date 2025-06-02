@@ -4,43 +4,28 @@ Quantification of feature scaling leakage in voice pathology detection using SVD
 import json
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
+from sklearn.gaussian_process import GaussianProcessClassifier
+from sklearn.gaussian_process.kernels import RBF
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.preprocessing import MinMaxScaler, StandardScaler, MaxAbsScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler, MaxAbsScaler, RobustScaler, QuantileTransformer
 from sklearn.metrics import matthews_corrcoef, balanced_accuracy_score
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
 from tqdm import tqdm
-import warnings
-
-
 
 
 if __name__ == "__main__":
-    EXPERIMENTS = 1000  # number of experiments
+    RANDOM_STATE = 42
+    EXPERIMENTS = 1  # number of experiments
     INFORMATION_PRINT = True  # if true, printing results of each experiment
     LEAKAGE = [True, False]
-    # grid definitions
-    PARAM_GRID_ADABOOST = {"n_estimators": [200, 250, 300, 350, 400],
-                           "learning_rate": [0.1, 1, 10]}
-    PARAM_GRID_SVM = {"C": [0.1, 0.5, 1, 5, 10, 50, 100, 500, 1000, 3000, 5000, 7000, 10000, 12000],
-                      "kernel": ["rbf"],
-                      "gamma": [0.5, 0.1, 0.05, 0.01, 0.005, 0.001, "auto"], }
-    PARAM_GRID_RF = {"n_estimators": [50, 75, 100, 125, 150, 175],
-                     "criterion": ["gini"],
-                     "min_samples_split": [2, 3, 4, 5, 6],
-                     "max_features": ["sqrt"]}
-    PARAM_GRID_DT = {"criterion": ["gini", "log_loss", "entropy"],
-                     "min_samples_split": [2, 3, 4, 5, 6, 7, 8, 9, 10],
-                     "splitter": ["best", "random"],
-                     "max_features": ["log2", "sqrt"]}
-    PARAM_GRID_MLP = {
-        'activation': ['relu', 'tanh'],
-        'learning_rate_init': [0.001, 0.01, 0.1],
-        'alpha': [0.0001, 0.001, 0.01]
-    }
 
     # load data
     dataset = pd.read_csv(Path(".", "data", "flattened_features.csv"))
@@ -48,23 +33,62 @@ if __name__ == "__main__":
     # drop target and session_id columns
     X = dataset.drop(columns=["pathology", "session_id"])
 
+    # grid definitions
+    PARAM_GRID_ADABOOST = {"n_estimators": [100, 150, 200, 250],
+                           "learning_rate": [0.1, 1, 10]}
+    PARAM_GRID_SVM = {"C": [1, 5, 10, 50, 100, 500, 1000, 5000],
+                      "kernel": ["rbf"],
+                      "gamma": [1.0, 0.5, 0.1, 0.05, 0.01, "auto"],
+                      'random_state': [RANDOM_STATE]}
+    PARAM_GRID_RF = {"n_estimators": [50, 75, 100, 125, 150, 175, 200],
+                     "criterion": ["gini"],
+                     "min_samples_split": [2, 3, 4],
+                     "max_features": ["sqrt"]}
+    PARAM_GRID_DT = {"criterion": ["gini", "log_loss", "entropy"],
+                     "min_samples_split": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+                     "splitter": ["best", "random"],
+                     "max_features": ["log2", "sqrt"]}
+    PARAM_GRID_MLP = {
+        'activation': ['relu'],
+
+        'hidden_layer_sizes': [[int(2 * X.shape[1])], [int(1.6 * X.shape[1])],
+                               [int(1.2 * X.shape[1])],
+                               [int(0.8 * X.shape[1])],
+                               ]
+    }
+    PARAM_GRID_NB = {'var_smoothing': [1e-9]}
+    PARAM_GRID_KNN = {'n_neighbors': [1, 3, 5, 7, 9, 11, 13, 15],
+                      'weights': ['uniform', 'distance'],}
+    PARAM_GRID_LDA = {'solver': ['svd']}
+    PARAM_GRID_QDA = {'tol': [0.0001],
+                      'reg_param': [0.0, 0.0001, 0.01]}
+    PARAM_GRID_GP = {'kernel': [1.0 * RBF(1.0)],
+                     'random_state': [RANDOM_STATE]}
+
+
+
     # classifiers with params grid
     clfs = {
-        "adaboost": [PARAM_GRID_ADABOOST, AdaBoostClassifier(random_state=42)],
-        "svm": [PARAM_GRID_SVM, SVC(random_state=42, max_iter=int(5e5))],
-        "rf": [PARAM_GRID_RF, RandomForestClassifier(random_state=42)],
-        "dt": [PARAM_GRID_DT, DecisionTreeClassifier(random_state=42)],
-        "mlp": [PARAM_GRID_MLP, MLPClassifier(max_iter=10000, random_state=42,
-                                              hidden_layer_sizes=int(0.8 * X.shape[1]))],
+        "mlp": [PARAM_GRID_MLP, MLPClassifier(max_iter=10000, random_state=RANDOM_STATE,
+                                              solver="lbfgs")],
+        "gaussianNB": [PARAM_GRID_NB, GaussianNB()],
+        "knn": [PARAM_GRID_KNN, KNeighborsClassifier()],
+        "lda": [PARAM_GRID_LDA, LinearDiscriminantAnalysis()],
+        'qda': [PARAM_GRID_QDA, QuadraticDiscriminantAnalysis()],
+        'gaussian_process': [PARAM_GRID_GP, GaussianProcessClassifier()],
+        "adaboost": [PARAM_GRID_ADABOOST, AdaBoostClassifier(random_state=RANDOM_STATE)],
+        "svm": [PARAM_GRID_SVM, SVC(max_iter=int(5e5))],
+        "rf": [PARAM_GRID_RF, RandomForestClassifier(random_state=RANDOM_STATE)],
+        "dt": [PARAM_GRID_DT, DecisionTreeClassifier(random_state=RANDOM_STATE)],
+
     }
 
     for clf_name, clf_settings in clfs.items():
         clf_grid = clf_settings[0]
         clf = clf_settings[1]
         results = {}
-        for scaler in [MaxAbsScaler()]:
-                       # MinMaxScaler(), StandardScaler()
-                       # ]:
+        for scaler in [MaxAbsScaler(), MinMaxScaler(), StandardScaler(), RobustScaler(),
+            QuantileTransformer(output_distribution="normal", random_state=RANDOM_STATE)]:
             print(f"Running {clf_name} with {scaler.__class__.__name__}")
             for split_seed in tqdm(range(EXPERIMENTS)):
                 # matthews correlation coefficient
@@ -90,7 +114,7 @@ if __name__ == "__main__":
                     # perform grid search for given classifier and corresponding grid
                     grid_search = GridSearchCV(estimator=clf, param_grid=clf_grid,
                                                scoring="balanced_accuracy",
-                                               cv=10, n_jobs=-1)
+                                               cv=5, n_jobs=-1)
 
                     # Fit the grid search to the training data
                     grid_search.fit(X_train, y_train)
