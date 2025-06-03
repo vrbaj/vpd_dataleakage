@@ -68,15 +68,15 @@ if __name__ == "__main__":
 
     # classifiers with params grid
     clfs = {
-        #"gaussianNB": [PARAM_GRID_NB, GaussianNB()],
-        #"knn": [PARAM_GRID_KNN, KNeighborsClassifier()],
-        #"lda": [PARAM_GRID_LDA, LinearDiscriminantAnalysis()],
-        #'qda': [PARAM_GRID_QDA, QuadraticDiscriminantAnalysis()],
-        #'gaussian_process': [PARAM_GRID_GP, GaussianProcessClassifier(random_state=RANDOM_STATE)],
-        #"adaboost": [PARAM_GRID_ADABOOST, AdaBoostClassifier(random_state=RANDOM_STATE)],
-        #"svm": [PARAM_GRID_SVM, SVC(max_iter=int(5e5), random_state=RANDOM_STATE)],
-        #"rf": [PARAM_GRID_RF, RandomForestClassifier(random_state=RANDOM_STATE)],
-        #"dt": [PARAM_GRID_DT, DecisionTreeClassifier(random_state=RANDOM_STATE)],
+        "gaussianNB": [PARAM_GRID_NB, GaussianNB()],
+        "knn": [PARAM_GRID_KNN, KNeighborsClassifier()],
+        "lda": [PARAM_GRID_LDA, LinearDiscriminantAnalysis()],
+        'qda': [PARAM_GRID_QDA, QuadraticDiscriminantAnalysis()],
+        'gaussian_process': [PARAM_GRID_GP, GaussianProcessClassifier(random_state=RANDOM_STATE)],
+        "adaboost": [PARAM_GRID_ADABOOST, AdaBoostClassifier(random_state=RANDOM_STATE)],
+        "svm": [PARAM_GRID_SVM, SVC(max_iter=int(5e5), random_state=RANDOM_STATE)],
+        "rf": [PARAM_GRID_RF, RandomForestClassifier(random_state=RANDOM_STATE)],
+        "dt": [PARAM_GRID_DT, DecisionTreeClassifier(random_state=RANDOM_STATE)],
         "mlp": [PARAM_GRID_MLP, MLPClassifier(max_iter=10000, random_state=RANDOM_STATE,
                                               solver="lbfgs")]
 
