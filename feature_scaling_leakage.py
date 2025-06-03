@@ -12,6 +12,7 @@ from sklearn.gaussian_process import GaussianProcessClassifier
 from sklearn.gaussian_process.kernels import RBF
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.pipeline import Pipeline
 from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, MaxAbsScaler, RobustScaler, QuantileTransformer
@@ -24,7 +25,7 @@ from tqdm import tqdm
 if __name__ == "__main__":
     RANDOM_STATE = 42
     EXPERIMENTS = 1000  # number of experiments
-    INFORMATION_PRINT = True  # if true, printing results of each experiment
+    INFORMATION_PRINT = False  # if true, printing results of each experiment
     LEAKAGE = [True, False]
 
     # load data
@@ -89,6 +90,7 @@ if __name__ == "__main__":
             QuantileTransformer(output_distribution="normal", random_state=RANDOM_STATE)]:
             print(f"Running {clf_name} with {scaler.__class__.__name__}")
             for split_seed in tqdm(range(EXPERIMENTS)):
+                np.random.seed(split_seed)
                 # matthews correlation coefficient
                 mcc = {"leakage": 0,
                        "correct": 0}
@@ -101,21 +103,23 @@ if __name__ == "__main__":
                         # introducing data leakage by applying transformation on the whole dataset
                         X = scaler.fit_transform(X)
                         X_train, X_test, y_train, y_test = train_test_split(
-                            X, y, test_size=0.2, random_state=split_seed, stratify=y)
+                            X, y, test_size=0.2, random_state=split_seed)
+                        grid_search = GridSearchCV(estimator=clf, param_grid=clf_grid,
+                                                   scoring="balanced_accuracy",
+                                                   cv=5, n_jobs=-1)
+                        grid_search.fit(X_train, y_train)
                     else:
                         # correct approach, fit transformation on training data
                         X_train, X_test, y_train, y_test = train_test_split(
-                            X, y, test_size=0.2, random_state=split_seed, stratify=y)
+                            X, y, test_size=0.2, random_state=split_seed)
+
+                        pipeline = Pipeline(steps=[("scaler", scaler), ("classifier", clf)])
+                        grid_search = GridSearchCV(pipeline, param_grid=clf_grid, cv=5, n_jobs=-1)
+                        grid_search.fit(X_train, y_train)
                         X_train = scaler.fit_transform(X_train)
                         X_test = scaler.transform(X_test)
 
-                    # perform grid search for given classifier and corresponding grid
-                    grid_search = GridSearchCV(estimator=clf, param_grid=clf_grid,
-                                               scoring="balanced_accuracy",
-                                               cv=5, n_jobs=-1)
 
-                    # Fit the grid search to the training data
-                    grid_search.fit(X_train, y_train)
 
                     # Evaluate the best model on the test set
                     best_model = grid_search.best_estimator_
