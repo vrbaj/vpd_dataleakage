@@ -23,7 +23,7 @@ from tqdm import tqdm
 
 if __name__ == "__main__":
     RANDOM_STATE = 42
-    EXPERIMENTS = 1  # number of experiments
+    EXPERIMENTS = 1000  # number of experiments
     INFORMATION_PRINT = True  # if true, printing results of each experiment
     LEAKAGE = [True, False]
 
@@ -38,8 +38,7 @@ if __name__ == "__main__":
                            "learning_rate": [0.1, 1, 10]}
     PARAM_GRID_SVM = {"C": [1, 5, 10, 50, 100, 500, 1000, 5000],
                       "kernel": ["rbf"],
-                      "gamma": [1.0, 0.5, 0.1, 0.05, 0.01, "auto"],
-                      'random_state': [RANDOM_STATE]}
+                      "gamma": [1.0, 0.5, 0.1, 0.05, 0.01, "auto"]}
     PARAM_GRID_RF = {"n_estimators": [50, 75, 100, 125, 150, 175, 200],
                      "criterion": ["gini"],
                      "min_samples_split": [2, 3, 4],
@@ -62,24 +61,23 @@ if __name__ == "__main__":
     PARAM_GRID_LDA = {'solver': ['svd']}
     PARAM_GRID_QDA = {'tol': [0.0001],
                       'reg_param': [0.0, 0.0001, 0.01]}
-    PARAM_GRID_GP = {'kernel': [1.0 * RBF(1.0)],
-                     'random_state': [RANDOM_STATE]}
+    PARAM_GRID_GP = {'kernel': [1.0 * RBF(1.0)]}
 
 
 
     # classifiers with params grid
     clfs = {
+        #"gaussianNB": [PARAM_GRID_NB, GaussianNB()],
+        #"knn": [PARAM_GRID_KNN, KNeighborsClassifier()],
+        #"lda": [PARAM_GRID_LDA, LinearDiscriminantAnalysis()],
+        #'qda': [PARAM_GRID_QDA, QuadraticDiscriminantAnalysis()],
+        #'gaussian_process': [PARAM_GRID_GP, GaussianProcessClassifier(random_state=RANDOM_STATE)],
+        #"adaboost": [PARAM_GRID_ADABOOST, AdaBoostClassifier(random_state=RANDOM_STATE)],
+        #"svm": [PARAM_GRID_SVM, SVC(max_iter=int(5e5), random_state=RANDOM_STATE)],
+        #"rf": [PARAM_GRID_RF, RandomForestClassifier(random_state=RANDOM_STATE)],
+        #"dt": [PARAM_GRID_DT, DecisionTreeClassifier(random_state=RANDOM_STATE)],
         "mlp": [PARAM_GRID_MLP, MLPClassifier(max_iter=10000, random_state=RANDOM_STATE,
-                                              solver="lbfgs")],
-        "gaussianNB": [PARAM_GRID_NB, GaussianNB()],
-        "knn": [PARAM_GRID_KNN, KNeighborsClassifier()],
-        "lda": [PARAM_GRID_LDA, LinearDiscriminantAnalysis()],
-        'qda': [PARAM_GRID_QDA, QuadraticDiscriminantAnalysis()],
-        'gaussian_process': [PARAM_GRID_GP, GaussianProcessClassifier()],
-        "adaboost": [PARAM_GRID_ADABOOST, AdaBoostClassifier(random_state=RANDOM_STATE)],
-        "svm": [PARAM_GRID_SVM, SVC(max_iter=int(5e5))],
-        "rf": [PARAM_GRID_RF, RandomForestClassifier(random_state=RANDOM_STATE)],
-        "dt": [PARAM_GRID_DT, DecisionTreeClassifier(random_state=RANDOM_STATE)],
+                                              solver="lbfgs")]
 
     }
 
