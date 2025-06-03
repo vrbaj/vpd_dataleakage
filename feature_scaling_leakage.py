@@ -90,6 +90,7 @@ if __name__ == "__main__":
             QuantileTransformer(output_distribution="normal", random_state=RANDOM_STATE)]:
             print(f"Running {clf_name} with {scaler.__class__.__name__}")
             for split_seed in tqdm(range(EXPERIMENTS)):
+                np.random.seed(split_seed)
                 # matthews correlation coefficient
                 mcc = {"leakage": 0,
                        "correct": 0}
