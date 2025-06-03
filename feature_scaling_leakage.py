@@ -35,34 +35,34 @@ if __name__ == "__main__":
     X = dataset.drop(columns=["pathology", "session_id"])
 
     # grid definitions
-    PARAM_GRID_ADABOOST = {"n_estimators": [100, 150, 200, 250],
-                           "learning_rate": [0.1, 1, 10]}
-    PARAM_GRID_SVM = {"C": [1, 5, 10, 50, 100, 500, 1000, 5000],
-                      "kernel": ["rbf"],
-                      "gamma": [1.0, 0.5, 0.1, 0.05, 0.01, "auto"]}
-    PARAM_GRID_RF = {"n_estimators": [50, 75, 100, 125, 150, 175, 200],
-                     "criterion": ["gini"],
-                     "min_samples_split": [2, 3, 4],
-                     "max_features": ["sqrt"]}
-    PARAM_GRID_DT = {"criterion": ["gini", "log_loss", "entropy"],
-                     "min_samples_split": [2, 3, 4, 5, 6, 7, 8, 9, 10],
-                     "splitter": ["best", "random"],
-                     "max_features": ["log2", "sqrt"]}
+    PARAM_GRID_ADABOOST = {"classifier__n_estimators": [100, 150, 200, 250],
+                           "classifier__learning_rate": [0.1, 1, 10]}
+    PARAM_GRID_SVM = {"classifier__C": [1, 5, 10, 50, 100, 500, 1000, 5000],
+                      "classifier__kernel": ["rbf"],
+                      "classifier__gamma": [1.0, 0.5, 0.1, 0.05, 0.01, "auto"]}
+    PARAM_GRID_RF = {"classifier__n_estimators": [50, 75, 100, 125, 150, 175, 200],
+                     "classifier__criterion": ["gini"],
+                     "classifier__min_samples_split": [2, 3, 4],
+                     "classifier__max_features": ["sqrt"]}
+    PARAM_GRID_DT = {"classifier__criterion": ["gini", "log_loss", "entropy"],
+                     "classifier__min_samples_split": [2, 3, 4, 5, 6, 7, 8, 9, 10],
+                     "classifier__splitter": ["best", "random"],
+                     "classifier__max_features": ["log2", "sqrt"]}
     PARAM_GRID_MLP = {
-        'activation': ['relu'],
+        'classifier__activation': ['relu'],
 
-        'hidden_layer_sizes': [[int(2 * X.shape[1])], [int(1.6 * X.shape[1])],
+        'classifier__hidden_layer_sizes': [[int(2 * X.shape[1])], [int(1.6 * X.shape[1])],
                                [int(1.2 * X.shape[1])],
                                [int(0.8 * X.shape[1])],
                                ]
     }
-    PARAM_GRID_NB = {'var_smoothing': [1e-9]}
-    PARAM_GRID_KNN = {'n_neighbors': [1, 3, 5, 7, 9, 11, 13, 15],
-                      'weights': ['uniform', 'distance'],}
-    PARAM_GRID_LDA = {'solver': ['svd']}
-    PARAM_GRID_QDA = {'tol': [0.0001],
-                      'reg_param': [0.0, 0.0001, 0.01]}
-    PARAM_GRID_GP = {'kernel': [1.0 * RBF(1.0)]}
+    PARAM_GRID_NB = {'classifier__var_smoothing': [1e-9]}
+    PARAM_GRID_KNN = {'classifier__n_neighbors': [1, 3, 5, 7, 9, 11, 13, 15],
+                      'classifier__weights': ['uniform', 'distance'],}
+    PARAM_GRID_LDA = {'classifier__solver': ['svd']}
+    PARAM_GRID_QDA = {'classifier__tol': [0.0001],
+                      'classifier__reg_param': [0.0, 0.0001, 0.01]}
+    PARAM_GRID_GP = {'classifier__kernel': [1.0 * RBF(1.0)]}
 
 
 
@@ -104,9 +104,8 @@ if __name__ == "__main__":
                         X = scaler.fit_transform(X)
                         X_train, X_test, y_train, y_test = train_test_split(
                             X, y, test_size=0.2, random_state=split_seed)
-                        grid_search = GridSearchCV(estimator=clf, param_grid=clf_grid,
-                                                   scoring="balanced_accuracy",
-                                                   cv=5, n_jobs=-1)
+                        pipeline = Pipeline(steps=[("classifier", clf)])
+                        grid_search = GridSearchCV(pipeline, param_grid=clf_grid, cv=5, n_jobs=-1)
                         grid_search.fit(X_train, y_train)
                     else:
                         # correct approach, fit transformation on training data
