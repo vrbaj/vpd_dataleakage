@@ -33,8 +33,8 @@ if __name__ == "__main__":
     dataset = pd.read_csv(Path(".", "data", "flattened_features.csv"))
     y = dataset["pathology"]
     # drop target and session_id columns
-    dataset.drop(columns=["pathology", "session_id"], inplace=True)
-    X = dataset
+    X_orig = dataset.drop(columns=["pathology", "session_id"])
+
     # grid definitions
     PARAM_GRID_ADABOOST = {"classifier__n_estimators": [100, 150, 200, 250],
                            "classifier__learning_rate": [0.1, 1, 10]}
@@ -52,9 +52,9 @@ if __name__ == "__main__":
     PARAM_GRID_MLP = {
         'classifier__activation': ['relu'],
 
-        'classifier__hidden_layer_sizes': [[int(2 * X.shape[1])], [int(1.6 * X.shape[1])],
-                               [int(1.2 * X.shape[1])],
-                               [int(0.8 * X.shape[1])],
+        'classifier__hidden_layer_sizes': [[int(2 * X_orig.shape[1])], [int(1.6 * X_orig.shape[1])],
+                               [int(1.2 * X_orig.shape[1])],
+                               [int(0.8 * X_orig.shape[1])],
                                ]
     }
     PARAM_GRID_NB = {'classifier__var_smoothing': [1e-9]}
@@ -73,7 +73,7 @@ if __name__ == "__main__":
         "knn": [PARAM_GRID_KNN, KNeighborsClassifier()],
         "lda": [PARAM_GRID_LDA, LinearDiscriminantAnalysis()],
         'qda': [PARAM_GRID_QDA, QuadraticDiscriminantAnalysis()],
-        'gaussian_process': [PARAM_GRID_GP, GaussianProcessClassifier(random_state=RANDOM_STATE)],
+        #'gaussian_process': [PARAM_GRID_GP, GaussianProcessClassifier(random_state=RANDOM_STATE)],
         "adaboost": [PARAM_GRID_ADABOOST, AdaBoostClassifier(random_state=RANDOM_STATE)],
         "svm": [PARAM_GRID_SVM, SVC(max_iter=int(5e5), random_state=RANDOM_STATE)],
         "rf": [PARAM_GRID_RF, RandomForestClassifier(random_state=RANDOM_STATE)],
@@ -100,7 +100,7 @@ if __name__ == "__main__":
                        "correct": 0}
 
                 for leakage in LEAKAGE:
-                    X = deepcopy(dataset)
+                    X = deepcopy(X_orig)
                     if leakage:
                         # introducing data leakage by applying transformation on the whole dataset
 
@@ -109,23 +109,20 @@ if __name__ == "__main__":
                             X, y, test_size=0.2, random_state=split_seed)
                         pipeline = Pipeline(steps=[("classifier", clf)])
                         grid_search = GridSearchCV(pipeline, param_grid=clf_grid, cv=5, n_jobs=-1)
-                        grid_search.fit(X_train, y_train)
+
+
                     else:
                         # correct approach, fit transformation on training data
                         X_train, X_test, y_train, y_test = train_test_split(
                             X, y, test_size=0.2, random_state=split_seed)
-
                         pipeline = Pipeline(steps=[("scaler", scaler), ("classifier", clf)])
                         grid_search = GridSearchCV(pipeline, param_grid=clf_grid, cv=5, n_jobs=-1)
-                        grid_search.fit(X_train, y_train)
-                        X_train = scaler.fit_transform(X_train)
-                        X_test = scaler.transform(X_test)
 
-
-
+                    grid_search.fit(X_train, y_train)
                     # Evaluate the best model on the test set
                     best_model = grid_search.best_estimator_
                     y_pred = best_model.predict(X_test)
+
 
                     # Compute and display Matthews correlation coefficient
                     mcc_test = matthews_corrcoef(y_test, y_pred)
