@@ -35,11 +35,11 @@ def run_experiment(clf_name, clf, scaler, EXPERIMENTS, X_orig, y, RANDOM_STATE, 
             if leakage:
                 X = scaler.fit_transform(X)
                 X_train, X_test, y_train, y_test = train_test_split(
-                    X, y, test_size=0.2, random_state=split_seed)
+                    X, y, test_size=0.2, random_state=split_seed, stratify=y)
                 clf.fit(X_train, y_train)
             else:
                 X_train, X_test, y_train, y_test = train_test_split(
-                    X, y, test_size=0.2, random_state=split_seed)
+                    X, y, test_size=0.2, random_state=split_seed, stratify=y)
                 X_train = scaler.fit_transform(X_train)
                 X_test = scaler.transform(X_test)
                 clf.fit(X_train, y_train)
