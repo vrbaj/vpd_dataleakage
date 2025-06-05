@@ -150,6 +150,7 @@ if __name__ == "__main__":
             # dump results
             filename_to_save = (f"results_{scaler.__class__.__name__}"
                                 f"_leakage_{EXPERIMENTS}_{clf_name}.json")
+            Path("results").mkdir(exist_ok=True)
             with open(Path("results", filename_to_save), "w",
                       encoding="utf8") as results_file:
                 json.dump(results, results_file)
