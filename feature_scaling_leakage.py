@@ -2,6 +2,7 @@
 Quantification of feature scaling leakage in voice pathology detection using SVD.
 """
 import json
+from copy import deepcopy
 from pathlib import Path
 
 import numpy as np
@@ -32,7 +33,7 @@ if __name__ == "__main__":
     dataset = pd.read_csv(Path(".", "data", "flattened_features.csv"))
     y = dataset["pathology"]
     # drop target and session_id columns
-    X = dataset.drop(columns=["pathology", "session_id"])
+    dataset.drop(columns=["pathology", "session_id"], inplace=True)
 
     # grid definitions
     PARAM_GRID_ADABOOST = {"classifier__n_estimators": [100, 150, 200, 250],
@@ -101,6 +102,7 @@ if __name__ == "__main__":
                 for leakage in LEAKAGE:
                     if leakage:
                         # introducing data leakage by applying transformation on the whole dataset
+                        X = deepcopy(dataset)
                         X = scaler.fit_transform(X)
                         X_train, X_test, y_train, y_test = train_test_split(
                             X, y, test_size=0.2, random_state=split_seed)
@@ -109,6 +111,7 @@ if __name__ == "__main__":
                         grid_search.fit(X_train, y_train)
                     else:
                         # correct approach, fit transformation on training data
+                        X = deepcopy(dataset)
                         X_train, X_test, y_train, y_test = train_test_split(
                             X, y, test_size=0.2, random_state=split_seed)
 
