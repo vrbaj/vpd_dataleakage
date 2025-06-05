@@ -90,7 +90,7 @@ if __name__ == "__main__":
                 mcc = {"leakage": 0.0,
                        "correct": 0.0}
                 # balanced accuracy
-                bcc = {"leakage": 0.0,
+                bac = {"leakage": 0.0,
                        "correct": 0.0}
 
                 for leakage in LEAKAGE:
@@ -101,14 +101,13 @@ if __name__ == "__main__":
                         X_train, X_test, y_train, y_test = train_test_split(
                             X, y, test_size=0.2, random_state=split_seed)
                         pipeline = Pipeline(steps=[("classifier", clf)])
-                        grid_search = GridSearchCV(pipeline, param_grid=clf_grid, cv=5, n_jobs=-1)
                     else:
                         # correct approach, fit transformation on training data
                         X_train, X_test, y_train, y_test = train_test_split(
                             X, y, test_size=0.2, random_state=split_seed)
                         pipeline = Pipeline(steps=[("scaler", scaler), ("classifier", clf)])
-                        grid_search = GridSearchCV(pipeline, param_grid=clf_grid, cv=5, n_jobs=-1)
 
+                    grid_search = GridSearchCV(pipeline, param_grid=clf_grid, cv=5, n_jobs=-1)
                     grid_search.fit(X_train, y_train)
                     # Evaluate the best model on the test set
                     y_pred = grid_search.predict(X_test)
@@ -121,18 +120,18 @@ if __name__ == "__main__":
                     # Save results to dictionary
                     if leakage:
                         mcc["leakage"] = mcc_test
-                        bcc["leakage"] = bac_test
+                        bac["leakage"] = bac_test
                     else:
                         mcc["correct"] = mcc_test
-                        bcc["correct"] = bac_test
-                results[split_seed] = {"mcc": mcc, "bcc": bcc}
+                        bac["correct"] = bac_test
+                results[split_seed] = {"mcc": mcc, "bcc": bac}
                 if INFORMATION_PRINT:
                     print(f"Difference {mcc["leakage"] - mcc["correct"]} in Matthews "
                           f"Correlation Coefficient for seed {split_seed}, "
                           f"mcc correct: {mcc['correct']}")
-                    print(f"Difference {bcc["leakage"] - bcc["correct"]} in Balanced"
+                    print(f"Difference {bac["leakage"] - bac["correct"]} in Balanced"
                           f" Accuracy for seed {split_seed}, "
-                          f"bcc correct: {bcc['correct']}")
+                          f"bcc correct: {bac['correct']}")
             # dump results
             filename_to_save = (f"results_{scaler.__class__.__name__}"
                                 f"_leakage_{EXPERIMENTS}_{clf_name}.json")
