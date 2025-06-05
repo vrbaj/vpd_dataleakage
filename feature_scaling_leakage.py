@@ -33,8 +33,8 @@ if __name__ == "__main__":
     dataset = pd.read_csv(Path(".", "data", "flattened_features.csv"))
     y = dataset["pathology"]
     # drop target and session_id columns
-    X = dataset.drop(columns=["pathology", "session_id"])
-
+    dataset.drop(columns=["pathology", "session_id"], inplace=True)
+    X = dataset
     # grid definitions
     PARAM_GRID_ADABOOST = {"classifier__n_estimators": [100, 150, 200, 250],
                            "classifier__learning_rate": [0.1, 1, 10]}
