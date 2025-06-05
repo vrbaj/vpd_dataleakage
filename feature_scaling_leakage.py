@@ -25,7 +25,7 @@ from tqdm import tqdm
 
 if __name__ == "__main__":
     RANDOM_STATE = 42
-    EXPERIMENTS = 1000  # number of experiments
+    EXPERIMENTS = 1  # number of experiments
     INFORMATION_PRINT = False  # if true, printing results of each experiment
     LEAKAGE = [True, False]
 
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     dataset = pd.read_csv(Path(".", "data", "flattened_features.csv"))
     y = dataset["pathology"]
     # drop target and session_id columns
-    dataset.drop(columns=["pathology", "session_id"], inplace=True)
+    X = dataset.drop(columns=["pathology", "session_id"])
 
     # grid definitions
     PARAM_GRID_ADABOOST = {"classifier__n_estimators": [100, 150, 200, 250],
@@ -100,9 +100,10 @@ if __name__ == "__main__":
                        "correct": 0}
 
                 for leakage in LEAKAGE:
+                    X = deepcopy(dataset)
                     if leakage:
                         # introducing data leakage by applying transformation on the whole dataset
-                        X = deepcopy(dataset)
+
                         X = scaler.fit_transform(X)
                         X_train, X_test, y_train, y_test = train_test_split(
                             X, y, test_size=0.2, random_state=split_seed)
@@ -111,7 +112,6 @@ if __name__ == "__main__":
                         grid_search.fit(X_train, y_train)
                     else:
                         # correct approach, fit transformation on training data
-                        X = deepcopy(dataset)
                         X_train, X_test, y_train, y_test = train_test_split(
                             X, y, test_size=0.2, random_state=split_seed)
 
