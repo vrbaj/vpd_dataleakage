@@ -23,7 +23,8 @@ from sklearn.metrics import matthews_corrcoef, balanced_accuracy_score
 from time import time
 
 
-def run_experiment(clf_name, clf, scaler, EXPERIMENTS, X_orig, y, RANDOM_STATE, LEAKAGE, INFORMATION_PRINT, stratify):
+def run_experiment(clf_name, clf, scaler, EXPERIMENTS, X_orig, y, RANDOM_STATE, LEAKAGE,
+                   INFORMATION_PRINT, stratify):
     results = {}
     for split_seed in range(EXPERIMENTS):
         np.random.seed(split_seed)
@@ -85,19 +86,18 @@ if __name__ == "__main__":
     X = dataset.drop(columns=["pathology", "session_id"])
 
     PARAM_GRID = {
-        "gaussianNB": GaussianNB(var_smoothing=1e-9),
+        "gaussianNB": GaussianNB(),
         "knn": KNeighborsClassifier(n_neighbors=11, weights='distance'),
-        "lda": LinearDiscriminantAnalysis(solver='svd'),
-        'qda': QuadraticDiscriminantAnalysis(tol=0.0001, reg_param=0.01),
-        'gaussian_process': GaussianProcessClassifier(kernel=RBF(), random_state=RANDOM_STATE),
-        "adaboost": AdaBoostClassifier(n_estimators=300, learning_rate=0.1, random_state=RANDOM_STATE),
         "svm": SVC(C=500, kernel="rbf", gamma="auto", random_state=RANDOM_STATE, max_iter=100000),
-        "rf": RandomForestClassifier(n_estimators=175, criterion="gini", min_samples_split=4,
+        'gaussian_process': GaussianProcessClassifier(random_state=RANDOM_STATE),
+        "lda": LinearDiscriminantAnalysis(),
+        'qda': QuadraticDiscriminantAnalysis(reg_param=0.01),
+        "dt": DecisionTreeClassifier(min_samples_split=10, splitter="random",
                                      max_features="sqrt", random_state=RANDOM_STATE),
-        "dt": DecisionTreeClassifier(criterion="gini", min_samples_split=10, splitter="random",
-                                     max_features="sqrt", random_state=RANDOM_STATE),
-        "mlp": MLPClassifier(activation='relu', hidden_layer_sizes=[int(2 * X.shape[1])],
-                              random_state=RANDOM_STATE, solver="lbfgs", max_iter=10000)
+        "rf": RandomForestClassifier(n_estimators=175, min_samples_split=4, random_state=RANDOM_STATE),
+        "adaboost": AdaBoostClassifier(n_estimators=300, learning_rate=0.1, random_state=RANDOM_STATE),
+        "mlp": MLPClassifier(hidden_layer_sizes=[int(2 * X.shape[1])],
+                             random_state=RANDOM_STATE, solver="lbfgs", max_iter=10000)
     }
 
     scalers = [MaxAbsScaler(), MinMaxScaler(), StandardScaler(), RobustScaler(),
@@ -105,7 +105,8 @@ if __name__ == "__main__":
 
     start = time()
     Parallel(n_jobs=os.cpu_count())(
-        delayed(run_experiment)(clf_name, clf, scaler, EXPERIMENTS, X, y, RANDOM_STATE, LEAKAGE, INFORMATION_PRINT, stratify)
+        delayed(run_experiment)(clf_name, clf, scaler, EXPERIMENTS, X, y, RANDOM_STATE,
+                                LEAKAGE, INFORMATION_PRINT, stratify)
         for clf_name, clf in PARAM_GRID.items()
         for scaler in scalers
         for stratify in STRATIFY
