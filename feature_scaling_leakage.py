@@ -25,7 +25,7 @@ from tqdm import tqdm
 
 if __name__ == "__main__":
     RANDOM_STATE = 42
-    EXPERIMENTS = 1  # number of experiments
+    EXPERIMENTS = 1000  # number of experiments
     INFORMATION_PRINT = False  # if true, printing results of each experiment
     LEAKAGE = [True, False]
 
