@@ -23,7 +23,7 @@ from sklearn.metrics import matthews_corrcoef, balanced_accuracy_score
 from time import time
 
 
-def run_experiment(clf_name, clf, scaler, EXPERIMENTS, X_orig, y, RANDOM_STATE, LEAKAGE, INFORMATION_PRINT):
+def run_experiment(clf_name, clf, scaler, EXPERIMENTS, X_orig, y, RANDOM_STATE, LEAKAGE, INFORMATION_PRINT, stratify):
     results = {}
     for split_seed in range(EXPERIMENTS):
         np.random.seed(split_seed)
@@ -35,11 +35,13 @@ def run_experiment(clf_name, clf, scaler, EXPERIMENTS, X_orig, y, RANDOM_STATE, 
             if leakage:
                 X = scaler.fit_transform(X)
                 X_train, X_test, y_train, y_test = train_test_split(
-                    X, y, test_size=0.2, random_state=split_seed, stratify=y)
+                    X, y, test_size=0.2, random_state=split_seed,
+                    stratify=y if stratify else None)
                 clf.fit(X_train, y_train)
             else:
                 X_train, X_test, y_train, y_test = train_test_split(
-                    X, y, test_size=0.2, random_state=split_seed, stratify=y)
+                    X, y, test_size=0.2, random_state=split_seed,
+                    stratify=y if stratify else None)
                 X_train = scaler.fit_transform(X_train)
                 X_test = scaler.transform(X_test)
                 clf.fit(X_train, y_train)
@@ -63,8 +65,11 @@ def run_experiment(clf_name, clf, scaler, EXPERIMENTS, X_orig, y, RANDOM_STATE, 
                   f"BCC diff: {bcc['leakage'] - bcc['correct']:.4f}")
 
     filename = f"results_{scaler.__class__.__name__}_leakage_{EXPERIMENTS}_{clf_name}.json"
-    Path("results_minimal").mkdir(parents=True, exist_ok=True)
-    with open(Path("results_minimal", filename), "w", encoding="utf8") as f:
+    dirname = "results_minimal"
+    if stratify:
+        dirname += "_stratified"
+    Path(dirname).mkdir(parents=True, exist_ok=True)
+    with open(Path(dirname, filename), "w", encoding="utf8") as f:
         json.dump(results, f)
 
 
@@ -73,6 +78,7 @@ if __name__ == "__main__":
     EXPERIMENTS = 1000
     INFORMATION_PRINT = False
     LEAKAGE = [True, False]
+    STRATIFY = [True, False]
 
     dataset = pd.read_csv(Path("data", "flattened_features.csv"))
     y = dataset["pathology"]
@@ -99,8 +105,9 @@ if __name__ == "__main__":
 
     start = time()
     Parallel(n_jobs=os.cpu_count())(
-        delayed(run_experiment)(clf_name, clf, scaler, EXPERIMENTS, X, y, RANDOM_STATE, LEAKAGE, INFORMATION_PRINT)
+        delayed(run_experiment)(clf_name, clf, scaler, EXPERIMENTS, X, y, RANDOM_STATE, LEAKAGE, INFORMATION_PRINT, stratify)
         for clf_name, clf in PARAM_GRID.items()
         for scaler in scalers
+        for stratify in STRATIFY
     )
     print(f"Total duration of script: {time() - start}")
