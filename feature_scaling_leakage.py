@@ -9,8 +9,6 @@ import numpy as np
 import pandas as pd
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
-from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn.gaussian_process.kernels import RBF
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
@@ -63,9 +61,6 @@ if __name__ == "__main__":
     PARAM_GRID_LDA = {'classifier__solver': ['svd']}
     PARAM_GRID_QDA = {'classifier__tol': [0.0001],
                       'classifier__reg_param': [0.0, 0.0001, 0.01]}
-    PARAM_GRID_GP = {'classifier__kernel': [1.0 * RBF(1.0)]}
-
-
 
     # classifiers with params grid
     clfs = {
@@ -73,7 +68,6 @@ if __name__ == "__main__":
         "knn": [PARAM_GRID_KNN, KNeighborsClassifier()],
         "lda": [PARAM_GRID_LDA, LinearDiscriminantAnalysis()],
         'qda': [PARAM_GRID_QDA, QuadraticDiscriminantAnalysis()],
-        #'gaussian_process': [PARAM_GRID_GP, GaussianProcessClassifier(random_state=RANDOM_STATE)],
         "adaboost": [PARAM_GRID_ADABOOST, AdaBoostClassifier(random_state=RANDOM_STATE)],
         "svm": [PARAM_GRID_SVM, SVC(max_iter=int(5e5), random_state=RANDOM_STATE)],
         "rf": [PARAM_GRID_RF, RandomForestClassifier(random_state=RANDOM_STATE)],
@@ -103,14 +97,11 @@ if __name__ == "__main__":
                     X = deepcopy(X_orig)
                     if leakage:
                         # introducing data leakage by applying transformation on the whole dataset
-
                         X = scaler.fit_transform(X)
                         X_train, X_test, y_train, y_test = train_test_split(
                             X, y, test_size=0.2, random_state=split_seed)
                         pipeline = Pipeline(steps=[("classifier", clf)])
                         grid_search = GridSearchCV(pipeline, param_grid=clf_grid, cv=5, n_jobs=-1)
-
-
                     else:
                         # correct approach, fit transformation on training data
                         X_train, X_test, y_train, y_test = train_test_split(
@@ -120,9 +111,8 @@ if __name__ == "__main__":
 
                     grid_search.fit(X_train, y_train)
                     # Evaluate the best model on the test set
-                    best_model = grid_search.best_estimator_
-                    y_pred = best_model.predict(X_test)
-
+                    #best_model = grid_search.best_estimator_
+                    y_pred = grid_search.predict(X_test)
 
                     # Compute and display Matthews correlation coefficient
                     mcc_test = matthews_corrcoef(y_test, y_pred)
