@@ -66,7 +66,7 @@ def run_experiment(clf_name, clf, scaler, EXPERIMENTS, X_orig, y, RANDOM_STATE, 
                   f"BCC diff: {bcc['leakage'] - bcc['correct']:.4f}")
 
     filename = f"results_{scaler.__class__.__name__}_leakage_{EXPERIMENTS}_{clf_name}.json"
-    dirname = "results_minimal"
+    dirname = "voiced_results_minimal"
     if stratify:
         dirname += "_stratified"
     Path(dirname).mkdir(parents=True, exist_ok=True)
@@ -76,12 +76,13 @@ def run_experiment(clf_name, clf, scaler, EXPERIMENTS, X_orig, y, RANDOM_STATE, 
 
 if __name__ == "__main__":
     RANDOM_STATE = 42
-    EXPERIMENTS = 1000
+    EXPERIMENTS = 1
     INFORMATION_PRINT = False
     LEAKAGE = [True, False]
     STRATIFY = [True, False]
 
-    dataset = pd.read_csv(Path("data", "flattened_features.csv"))
+    dataset = pd.read_csv(Path("data", "voiced_features_8000_fft.csv"))
+    #dataset = pd.read_csv(Path("data", "flattened_features.csv"))
     y = dataset["pathology"]
     X = dataset.drop(columns=["pathology", "session_id"])
 
