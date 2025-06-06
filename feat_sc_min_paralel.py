@@ -11,20 +11,20 @@ from joblib import Parallel, delayed
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.gaussian_process import GaussianProcessClassifier
-from sklearn.gaussian_process.kernels import RBF
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler, StandardScaler, MaxAbsScaler, RobustScaler, QuantileTransformer
+from sklearn.preprocessing import (MinMaxScaler, StandardScaler,
+                                   MaxAbsScaler, RobustScaler, QuantileTransformer)
 from sklearn.metrics import matthews_corrcoef, balanced_accuracy_score
 from time import time
 import warnings
 
 
-def run_experiment(clf_name, clf, scaler, EXPERIMENTS, X_orig, y, RANDOM_STATE, LEAKAGE,
+def run_experiment(clf_name, clf, scaler, EXPERIMENTS, X_orig, y, dataset_name, LEAKAGE,
                    INFORMATION_PRINT, stratify):
     results = {}
     for split_seed in range(EXPERIMENTS):
@@ -67,7 +67,7 @@ def run_experiment(clf_name, clf, scaler, EXPERIMENTS, X_orig, y, RANDOM_STATE, 
                   f"BCC diff: {bcc['leakage'] - bcc['correct']:.4f}")
 
     filename = f"results_{scaler.__class__.__name__}_leakage_{EXPERIMENTS}_{clf_name}.json"
-    dirname = "voiced_results_minimal"
+    dirname = f"{dataset_name}_results"
     if stratify:
         dirname += "_stratified"
     Path(dirname).mkdir(parents=True, exist_ok=True)
@@ -76,43 +76,50 @@ def run_experiment(clf_name, clf, scaler, EXPERIMENTS, X_orig, y, RANDOM_STATE, 
 
 
 if __name__ == "__main__":
-    warnings.filterwarnings('ignore')
-    os.environ['PYTHONWARNINGS'] = 'ignore'
+    warnings.filterwarnings("ignore")
+    os.environ["PYTHONWARNINGS"] = "ignore"
     RANDOM_STATE = 42
     EXPERIMENTS = 1000
     INFORMATION_PRINT = False
     LEAKAGE = [True, False]
     STRATIFY = [True, False]
-
-    dataset = pd.read_csv(Path("data", "voiced_features_8000_fft.csv"))
-    #dataset = pd.read_csv(Path("data", "flattened_features.csv"))
-    y = dataset["pathology"]
-    X = dataset.drop(columns=["pathology", "session_id"])
-
-    PARAM_GRID = {
-        "gaussianNB": GaussianNB(),
-        "knn": KNeighborsClassifier(n_neighbors=11, weights='distance'),
-        "svm": SVC(C=500, kernel="rbf", gamma="auto", random_state=RANDOM_STATE, max_iter=100000),
-        'gaussian_process': GaussianProcessClassifier(random_state=RANDOM_STATE),
-        "lda": LinearDiscriminantAnalysis(),
-        'qda': QuadraticDiscriminantAnalysis(reg_param=0.01),
-        "dt": DecisionTreeClassifier(min_samples_split=10, splitter="random",
-                                     max_features="sqrt", random_state=RANDOM_STATE),
-        "rf": RandomForestClassifier(n_estimators=175, min_samples_split=4, random_state=RANDOM_STATE),
-        "adaboost": AdaBoostClassifier(n_estimators=300, learning_rate=0.1, random_state=RANDOM_STATE),
-        "mlp": MLPClassifier(hidden_layer_sizes=[int(2 * X.shape[1])],
-                             random_state=RANDOM_STATE, solver="lbfgs", max_iter=10000)
-    }
-
-    scalers = [MaxAbsScaler(), MinMaxScaler(), StandardScaler(), RobustScaler(),
-               QuantileTransformer(output_distribution="normal", random_state=RANDOM_STATE)]
-
     start = time()
-    Parallel(n_jobs=os.cpu_count())(
-        delayed(run_experiment)(clf_name, clf, scaler, EXPERIMENTS, X, y, RANDOM_STATE,
-                                LEAKAGE, INFORMATION_PRINT, stratify)
-        for clf_name, clf in PARAM_GRID.items()
-        for scaler in scalers
-        for stratify in STRATIFY
-    )
+    datasets = {"svd": pd.read_csv(Path("data", "voiced_features_8000_fft.csv")),
+                "voiced": pd.read_csv(Path("data", "voiced_features_8000_fft.csv"))}
+    for dataset_name, dataset in datasets.items():
+        #dataset = pd.read_csv(Path("data", "voiced_features_8000_fft.csv"))
+        #dataset = pd.read_csv(Path("data", "flattened_features.csv"))
+        y = dataset["pathology"]
+        X = dataset.drop(columns=["pathology", "session_id"])
+
+        PARAM_GRID = {
+            "gaussianNB": GaussianNB(),
+            "knn": KNeighborsClassifier(n_neighbors=11, weights='distance'),
+            "svm": SVC(C=500, kernel="rbf", gamma="auto", random_state=RANDOM_STATE,
+                       max_iter=100000),
+            'gaussian_process': GaussianProcessClassifier(n_restarts_optimizer=10,
+                                                          random_state=RANDOM_STATE),
+            "lda": LinearDiscriminantAnalysis(),
+            'qda': QuadraticDiscriminantAnalysis(reg_param=0.01),
+            "dt": DecisionTreeClassifier(min_samples_split=10, splitter="random",
+                                         max_features="sqrt", random_state=RANDOM_STATE),
+            "rf": RandomForestClassifier(n_estimators=175, min_samples_split=4,
+                                         random_state=RANDOM_STATE),
+            "adaboost": AdaBoostClassifier(n_estimators=300, learning_rate=0.1,
+                                           random_state=RANDOM_STATE),
+            "mlp": MLPClassifier(hidden_layer_sizes=[int(2 * X.shape[1])],
+                                 random_state=RANDOM_STATE, solver="lbfgs", max_iter=10000)
+        }
+
+        scalers = [MaxAbsScaler(), MinMaxScaler(), StandardScaler(), RobustScaler(),
+                   QuantileTransformer(output_distribution="normal", random_state=RANDOM_STATE)]
+
+
+        Parallel(n_jobs=os.cpu_count())(
+            delayed(run_experiment)(clf_name, clf, scaler, EXPERIMENTS, X, y, dataset_name,
+                                    LEAKAGE, INFORMATION_PRINT, stratify)
+            for clf_name, clf in PARAM_GRID.items()
+            for scaler in scalers
+            for stratify in STRATIFY
+        )
     print(f"Total duration of script: {time() - start}")
