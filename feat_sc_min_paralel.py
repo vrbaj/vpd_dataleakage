@@ -21,6 +21,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, MaxAbsScaler, RobustScaler, QuantileTransformer
 from sklearn.metrics import matthews_corrcoef, balanced_accuracy_score
 from time import time
+import warnings
 
 
 def run_experiment(clf_name, clf, scaler, EXPERIMENTS, X_orig, y, RANDOM_STATE, LEAKAGE,
@@ -75,6 +76,8 @@ def run_experiment(clf_name, clf, scaler, EXPERIMENTS, X_orig, y, RANDOM_STATE, 
 
 
 if __name__ == "__main__":
+    warnings.filterwarnings('ignore')
+    os.environ['PYTHONWARNINGS'] = 'ignore'
     RANDOM_STATE = 42
     EXPERIMENTS = 1000
     INFORMATION_PRINT = False
