@@ -76,7 +76,7 @@ def run_experiment(clf_name, clf, scaler, EXPERIMENTS, X_orig, y, RANDOM_STATE, 
 
 if __name__ == "__main__":
     RANDOM_STATE = 42
-    EXPERIMENTS = 1
+    EXPERIMENTS = 1000
     INFORMATION_PRINT = False
     LEAKAGE = [True, False]
     STRATIFY = [True, False]
