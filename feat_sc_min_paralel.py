@@ -84,11 +84,9 @@ if __name__ == "__main__":
     LEAKAGE = [True, False]
     STRATIFY = [True, False]
     start = time()
-    datasets = {"svd": pd.read_csv(Path("data", "flattened_features.csv")),}
-                #"voiced": pd.read_csv(Path("data", "voiced_features_8000_fft.csv"))}
+    datasets = {"svd": pd.read_csv(Path("data", "flattened_features.csv")),
+                "voiced": pd.read_csv(Path("data", "voiced_features_8000_fft.csv"))}
     for dataset_name, dataset in datasets.items():
-        #dataset = pd.read_csv(Path("data", "voiced_features_8000_fft.csv"))
-        #dataset = pd.read_csv(Path("data", "flattened_features.csv"))
         y = dataset["pathology"]
         X = dataset.drop(columns=["pathology", "session_id"])
 
